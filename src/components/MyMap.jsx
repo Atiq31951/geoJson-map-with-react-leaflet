@@ -1,12 +1,11 @@
 import React, { Component, createRef } from "react";
-import { Map, GeoJSON } from "react-leaflet";
-import mapData from "./../data/countries.json";
 import MunicipalityData from "./../data/sweden-municipalities.json";
 import "leaflet/dist/leaflet.css";
 import "./MyMap.css";
-
+import MuniMap from "./MuniMap";
+import CountiesMap from "./CountiesMap";
 class MyMap extends Component {
-  state = { color: "#ffff00" };
+  state = { color: "#ffff00", zoom: 4 };
 
   colors = ["green", "blue", "yellow", "orange", "grey"];
 
@@ -49,12 +48,35 @@ class MyMap extends Component {
     this.setState({ color: event.target.value });
   };
 
+  getMap = () => {
+    const { zoom } = this.state;
 
-  getMapZoom() {
-    return this.map && this.map?.leafletElement?.getZoom();
- }
+    if (zoom < 6) {
+      console.log("🚀 ~ file: MyMap.jsx ~ line 58 ~ MyMap ~ zoom", zoom);
+      return (
+        <MuniMap
+          zoom={zoom}
+          changeState={(zoomValue) => {
+            console.log("zoomValue", zoomValue);
+            this.setState({ zoom: zoomValue });
+          }}
+        />
+      );
+    }
+    return (
+      <CountiesMap
+        zoom={zoom}
+        changeState={(zoomValue) => {
+          console.log("zoomValue", zoomValue);
+          this.setState({ zoom: zoomValue });
+        }}
+      />
+    );
+
+    return null;
+  };
+
   render() {
-    console.log("getMapZoom", this.getMapZoom());
     if (MunicipalityData?.objects?.SWE_mun?.geometries) {
       var jsonDatas = MunicipalityData?.objects?.SWE_mun?.geometries;
       jsonDatas = jsonDatas.map(({ arcs, properties, type }) => ({
@@ -70,7 +92,10 @@ class MyMap extends Component {
               (acc, curr) => [
                 ...acc,
                 ...(curr.reduce(
-                  (acc, curr) => [...acc, ...(MunicipalityData.arcs[curr]|| [])],
+                  (acc, curr) => [
+                    ...acc,
+                    ...(MunicipalityData.arcs[curr] || []),
+                  ],
                   []
                 ) || []),
               ],
@@ -80,24 +105,10 @@ class MyMap extends Component {
         },
       }));
     }
-
-    console.log("jsonDatas", jsonDatas);
-    console.log("jsonDatas", mapData);
     return (
       <div>
         <h1 style={{ textAlign: "center" }}>My Map</h1>
-        <Map ref={(ref) => this.map = ref} style={{ height: "80vh" }} zoom={2} center={[20, 100]}>
-          <GeoJSON
-            style={this.countryStyle}
-            data={mapData.provinces.features}
-            onEachFeature={this.onEachCountry}
-          />
-        </Map>
-        <input
-          type="color"
-          value={this.state.color}
-          onChange={this.colorChange}
-        />
+        {this.getMap()}
       </div>
     );
   }
