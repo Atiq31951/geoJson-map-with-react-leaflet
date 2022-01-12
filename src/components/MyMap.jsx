@@ -5,7 +5,11 @@ import "./MyMap.css";
 import MuniMap from "./MuniMap";
 import CountiesMap from "./CountiesMap";
 class MyMap extends Component {
-  state = { color: "#ffff00", zoom: 4 };
+  state = {
+    color: "#ffff00",
+    zoom: 4,
+    center: [59.350534130617085, 18.04155513004905],
+  };
 
   colors = ["green", "blue", "yellow", "orange", "grey"];
 
@@ -35,9 +39,7 @@ class MyMap extends Component {
     console.log(countryName);
     layer.bindPopup(countryName);
 
-    layer.options.fillOpacity = Math.random(); //0-1 (0.1, 0.2, 0.3)
-    // const colorIndex = Math.floor(Math.random() * this.colors.length);
-    // layer.options.fillColor = this.colors[colorIndex]; //0
+    layer.options.fillOpacity = Math.random();
 
     layer.on({
       click: this.changeCountryColor,
@@ -49,16 +51,20 @@ class MyMap extends Component {
   };
 
   getMap = () => {
-    const { zoom } = this.state;
+    const { zoom, center } = this.state;
 
     if (zoom < 6) {
-      console.log("🚀 ~ file: MyMap.jsx ~ line 58 ~ MyMap ~ zoom", zoom);
       return (
         <MuniMap
           zoom={zoom}
-          changeState={(zoomValue) => {
-            console.log("zoomValue", zoomValue);
-            this.setState({ zoom: zoomValue });
+          center={center}
+          changeState={({ zoom, center }) => {
+            if (zoom) {
+              this.setState({ zoom: zoom });
+            }
+            if (center) {
+              this.setState({ center: center });
+            }
           }}
         />
       );
@@ -66,45 +72,18 @@ class MyMap extends Component {
     return (
       <CountiesMap
         zoom={zoom}
-        changeState={(zoomValue) => {
-          console.log("zoomValue", zoomValue);
-          this.setState({ zoom: zoomValue });
+        center={center}
+        changeState={({ zoom, center }) => {
+          this.setState({ zoom: zoom });
+          if (center) {
+            this.setState({ center: center });
+          }
         }}
       />
     );
-
-    return null;
   };
 
   render() {
-    if (MunicipalityData?.objects?.SWE_mun?.geometries) {
-      var jsonDatas = MunicipalityData?.objects?.SWE_mun?.geometries;
-      jsonDatas = jsonDatas.map(({ arcs, properties, type }) => ({
-        type: "Feature",
-        properties: {
-          ADMIN: properties.NAME_2,
-          ISO_A3: "ABW",
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: [
-            arcs.reduce(
-              (acc, curr) => [
-                ...acc,
-                ...(curr.reduce(
-                  (acc, curr) => [
-                    ...acc,
-                    ...(MunicipalityData.arcs[curr] || []),
-                  ],
-                  []
-                ) || []),
-              ],
-              []
-            ),
-          ],
-        },
-      }));
-    }
     return (
       <div>
         <h1 style={{ textAlign: "center" }}>My Map</h1>

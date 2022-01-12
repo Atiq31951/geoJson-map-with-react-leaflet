@@ -4,15 +4,18 @@ import mapData from "./../data/counties.json";
 import "leaflet/dist/leaflet.css";
 import "./MyMap.css";
 
-function MuniMap({ zoom, changeState }) {
+function MuniMap({ zoom, changeState, center }) {
   return (
     <Map
       //   ref={(ref) => (this.map = ref)}
       style={{ height: "80vh" }}
       zoom={zoom}
       zoomControl={true}
-      onZoomend={(event) => changeState(event.target._animateToZoom)}
-      center={[59.350534130617085, 18.04155513004905]}
+      onZoomend={(event) => changeState({ zoom: event.target._animateToZoom })}
+      onMoveEnd={(event) => {
+        changeState({ center: event.target.boxZoom._map.dragging.lastPos });
+      }}
+      center={center}
     >
       <GeoJSON
         // style={this.countryStyle}
